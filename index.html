@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+    <title>Map test zonder ArcGIS Server</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/3.23/esri/css/esri.css">
+    <style>
+      html, body, #map { height: 100%; width: 100%; margin: 0; padding: 0; }
+      #controls {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        z-index: 40;
+        width: 240px;
+        height: 70px;
+        background: #fff;
+        color: #000;
+        padding: 5px;
+        font-family: arial;
+        -moz-box-shadow: 0 0 5px #888;
+        -webkit-box-shadow: 0 0 5px #888;
+        box-shadow: 0 0 5px #888;
+      }
+    </style>
+    <script src="https://js.arcgis.com/3.23/"></script>
+    <script>
+    var map, graphics, gs, ela = {};
+    var serviceURL = 'http://ipta88907208.hana.ondemand.com/rsprinkhuizen/geo/query.xsjs';
+    //var serviceURL = "https://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer/0";
+    require([
+        "esri/basemaps",
+        "esri/map",
+        "esri/SpatialReference",
+        "esri/geometry/webMercatorUtils",
+        "esri/layers/FeatureLayer",
+        "esri/renderers/SimpleRenderer",
+        "esri/Color", 
+        "esri/symbols/SimpleFillSymbol",
+        "esri/symbols/SimpleLineSymbol",
+        "esri/symbols/SimpleMarkerSymbol",
+        "esri/InfoTemplate",
+        "dojo/_base/array",
+        "dojo/on",
+        "dojo/dom",
+        "dojo/parser",
+        "dojo/domReady!"], 
+    function(esriBasemaps, Map, SpatialReference, webMercatorUtils, FeatureLayer, SimpleRenderer, Color, SimpleFillSymbol, SimpleLineSymbol, SimpleMarkerSymbol, InfoTemplate, arrayUtils, on, dom, parser) {
+        parser.parse();
+        var content = "<b>Description</b>: ${description}" ;
+        var infoTemplate = new InfoTemplate("${id}", content);
+        esriBasemaps.rd = {
+                baseMapLayers: [{url: "https://services.arcgisonline.nl/arcgis/rest/services/Basiskaarten/Topo/MapServer" }]
+        
+        };
+        esriBasemaps.world = {
+                baseMapLayers: [{url: "https://services.arcgisonline.com/arcgis/rest/services/Reference/World_Boundaries_and_Places/MapServer" }]
+        };
+        var map = new Map("map", {
+            basemap: "topo",
+            center: [5.1214, 52.0907],//52.0907° N, 5.1214° E
+            zoom: 8,
+            logo: false,
+            slider: false,
+            spatialReference: new SpatialReference(4326)
+        });
+        map.on("load", init);
+
+        function showCoordinates(evt) {
+            var mp = webMercatorUtils.webMercatorToGeographic(evt.mapPoint);
+          //display mouse coordinates
+            dom.byId("info").innerHTML = evt.mapPoint.x.toFixed(5) + ", " + evt.mapPoint.y.toFixed(5);
+        }
+        function init() {
+            map.on("mouse-move", showCoordinates);
+            map.on("mouse-drag", showCoordinates);
+        var fl = new FeatureLayer( serviceURL,
+        {
+            mode: FeatureLayer.MODE_ONDEMAND,
+            outFields: ['*']
+          });
+        fl.setDefinitionExpression('"type"=1')
+        var sfs = new SimpleFillSymbol(
+            SimpleFillSymbol.STYLE_SOLID,
+            new SimpleLineSymbol(
+              SimpleLineSymbol.STYLE_SOLID,
+              new Color([200, 0, 0]), 
+              0.5 
+            ),
+            null
+          );
+        var sms = new SimpleMarkerSymbol({
+  "color": [255,255,255,64],
+  "size": 12,
+  "angle": -30,
+  "xoffset": 0,
+  "yoffset": 0,
+  "type": "esriSMS",
+  "style": "esriSMSCross",
+  "outline": {"color":[200,0,0,255],"width":1,"type":"esriSLS","style":"esriSLSSolid"}
+});
+        var sr = new SimpleRenderer(sms);
+        fl.setRenderer(sr);
+        map.addLayer(fl);
+        }
+    });
+    </script>
+</head>
+<body>
+    <div id="map">
+        <span id="info" style="position:absolute; left:15px; bottom:5px; color:#000; z-index:50;"></span>
+    </div>
+</body>
+
+</html>
